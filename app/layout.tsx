@@ -40,12 +40,7 @@ export default function RootLayout({
           >
              تمام مقالات
           </Link>
-          <Link
-            href="/create"
-            className="px-6 py-3 rounded-xl bg-slate-950/90 hover:bg-slate-800/90 text-slate-300 shadow-sm shadow-orange-900/85 font-semibold transition"
-          >
-            ایجاد پست جدید
-          </Link>
+          
         </div>
           </div>
         </header>

@@ -1,56 +1,60 @@
-// app/posts/[slug]/page.tsx
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import MarkdownRenderer from "@/components/MarkdownRenderer";
-import { prisma } from "@/lib/prisma"; // <--- این خط اضافه شد
+import { notFound } from 'next/navigation';
+import { reader } from '@/lib/keystatic-reader'; // یا مسیر فایل ریدر خودتان
+import LikeButton from '@/components/LikeButton';
+import Comments from '@/components/Comments';
+import MarkdownRenderer from '@/components/MarkdownRenderer'; // کامپوننت رندر مارک‌داون/MDX
 
-interface PostPageProps {
-  params: Promise<{ slug: string }>;
+interface PageProps {
+  params: Promise<{ slug: string }> | { slug: string };
 }
 
-export default async function PostPage({ params }: PostPageProps) {
-  const { slug } = await params;
+export default async function PostPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
 
-  // خواندن مقاله از دیتابیس با Prisma
-  const post = await prisma.post.findUnique({
-    where: { slug },
-  });
+  // ۱. خواندن مقاله از Keystatic
+  const post = await reader.collections.posts.read(slug);
 
   if (!post) {
     notFound();
   }
 
-  return (
-    <article className="max-w-3xl mx-auto bg-[#0d121e]/90 p-8 sm:p-12 rounded-3xl border border-slate-800 shadow-2xl backdrop-blur-md">
-      {/* Article Header */}
-      <header className="mb-10 pb-8 border-b border-slate-800/80">
-        <Link
-          href="/posts"
-          className="text-xs font-semibold text-cyan-400/80 hover:text-cyan-300 transition inline-block mb-5"
-        >
-          ← بازگشت به لیست مقالات
-        </Link>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-4 tracking-tight">
-          {post.title}
-        </h1>
-        <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
-          <span className="text-cyan-400 bg-cyan-950/40 px-2 py-1 rounded border border-cyan-800/40">
-            {post.slug}
-          </span>
-          {post.createdAt && (
-            <>
-              <span>•</span>
-              <span>{new Date(post.createdAt).toLocaleDateString("fa-IR")}</span>
-            </>
-          )}
-        </div>
-      </header>
+  // ۲. خواندن محتوای خام MDX/Markdown
+  const content = await post.content();
 
-      {/* Article Content */}
-      <div className="text-slate-200 leading-8 space-y-4">
-        <MarkdownRenderer content={post.content} />
+  return (
+    <main className="max-w-3xl mx-auto px-4 py-10" dir="rtl">
+      {/* عنوان مقاله */}
+      <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+
+      {/* تاریخ یا توضیحات کوتاه */}
+      {post.date && (
+        <p className="text-gray-400 text-sm mb-6">{post.date}</p>
+      )}
+
+      {/* تصویر شاخص (در صورت وجود) */}
+      {post.coverImage && (
+        <img
+          src={post.coverImage}
+          alt={post.title}
+          className="w-full h-auto rounded-xl mb-8 object-cover"
+        />
+      )}
+
+      {/* بخش رندر محتوای اصلی مقاله */}
+      <article className="prose prose-invert max-w-none mb-12">
+        <MarkdownRenderer content={content} />
+      </article>
+
+      {/* دکمه لایک */}
+      <div className="my-8">
+        <LikeButton slug={slug} />
       </div>
-    </article>
+
+      <hr className="border-gray-700 my-8" />
+
+      {/* بخش نظرات */}
+      <Comments slug={slug} />
+    </main>
   );
 }
-

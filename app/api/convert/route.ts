@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: "هیچ فایلی ارسال نشده است." },
+        { error: "فایلی دریافت نشد." },
         { status: 400 }
       );
     }
@@ -29,23 +29,30 @@ export async function POST(req: NextRequest) {
       const result = await mammoth.convertToHtml({ buffer });
       markdown = turndownService.turndown(result.value);
     } else if (fileName.endsWith(".pdf")) {
-      // ایمپورت داینامیک برای جلوگیری از ارورهای بیلد Turbopack
-      const pdfParse = require("pdf-parse");
-      const data = await pdfParse(buffer);
-      markdown = data.text;
+      try {
+        // dynamic require برای جلوگیری از ارورهای بیلد Turbopack
+        const pdfParse = require("pdf-parse");
+        const data = await pdfParse(buffer);
+        markdown = data.text || "";
+      } catch (pdfErr: any) {
+        console.error("PDF Parsing Error:", pdfErr);
+        return NextResponse.json(
+          { error: "خطا در خواندن فایل PDF. لطفاً فایل DOCX یا Markdown آپلود کنید." },
+          { status: 500 }
+        );
+      }
     } else {
       return NextResponse.json(
-        { error: "فرمت فایل پشتیبانی نمی‌شود (فقط .md, .txt, .docx, .pdf)." },
+        { error: "فرمت پشتیبانی نمی‌شود. لطفاً فایل md، txt، docx یا pdf ارسال کنید." },
         { status: 400 }
       );
     }
 
-    // بازگرداندن پاسخ حتماً با NextResponse.json
     return NextResponse.json({ markdown });
   } catch (error: any) {
     console.error("API Convert Error:", error);
     return NextResponse.json(
-      { error: error?.message || "خطایی در پردازش و تبدیل فایل رخ داد." },
+      { error: error?.message || "خطای ناشناخته در پردازش فایل." },
       { status: 500 }
     );
   }

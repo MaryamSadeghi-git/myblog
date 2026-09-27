@@ -1,14 +1,31 @@
-    // components/MarkdownRenderer.tsx
-    import { MDXRemote } from 'next-mdx-remote/rsc';
-    import CodeBlock from './CodeBlock';
+// components/MarkdownRenderer.tsx
+import { MDXRemote } from 'next-mdx-remote/rsc';
+import CodeBlock from './CodeBlock';
+import React from 'react';
 
-    export default function MarkdownRenderer({ content }: { content: string }) {
-      // مهم: MDXRemote ممکن است <pre> یا <code> را پاس دهد.
-      // ما هر دو را به CodeBlock متصل می‌کنیم.
-      const components = {
-        code: (props: any) => <CodeBlock {...props} />,
-        pre: ({ children }: any) => <>{children}</>, // <pre> را فقط به صورت wrapper نگه می‌داریم
-      };
-
-      return <MDXRemote source={content} components={components} />;
+const components = {
+  // جلوگیری از قرار گرفتن دیو داخل پاراگراف
+  p: (props: any) => <div className="mb-4 text-gray-700 leading-relaxed" {...props} />,
+  pre: (props: any) => <>{props.children}</>,
+  code: ({ className, children, ...props }: any) => {
+    const isBlock = className || (typeof children === 'string' && children.includes('\n'));
+    if (isBlock) {
+      return <CodeBlock className={className}>{children}</CodeBlock>;
     }
+    return (
+      <code className="bg-gray-100 text-red-500 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+        {children}
+      </code>
+    );
+  },
+};
+
+export default function MarkdownRenderer({ content }: { content: string }) {
+  if (!content) return null;
+
+  return (
+    <div className="prose max-w-none">
+      <MDXRemote source={content} components={components} />
+    </div>
+  );
+}
