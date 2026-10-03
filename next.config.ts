@@ -10,18 +10,16 @@
 // });
 
 // export default withMDX(nextConfig);
-// import type { NextConfig } from 'next';
-// import createNextIntlPlugin from 'next-intl/plugin';
+import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 // // آدرس فایل کانفیگ i18n
-// const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 // const nextConfig: NextConfig = {
 //   // تنظیمات دیگر شما در صورت وجود اینجا قرار می‌گیرد
 // };
 
-// export default withNextIntl(nextConfig);
-import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typescript: {
@@ -29,5 +27,5 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   }
 };
+export default withNextIntl(nextConfig);
 
-export default nextConfig;
