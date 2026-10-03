@@ -1,0 +1,30 @@
+{
+  "Common": {
+    "siteTitle": "My Blog"
+  },
+  "Posts": {
+    "title": "All Blog Posts",
+    "noImage": "No Image",
+    "readMore": "Read more →"
+  },
+  "Post": {
+    "like": "Like",
+    "liked": "Liked",
+    "comments": "Comments",
+    "noComments": "No comments yet."
+  },
+  "CommentForm": {
+    "namePlaceholder": "Your name",
+    "commentPlaceholder": "Write your comment",
+    "submit": "Submit comment",
+    "submitting": "Submitting...",
+    "errorSubmit": "Failed to submit the comment.",
+    "errorNetwork": "An error occurred while submitting the comment."
+  },
+  "Navigation": {
+    "home": "Home",
+    "archive": "Archive",
+    "about": "About Me"
+  }
+}
+

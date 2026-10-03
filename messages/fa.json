@@ -1,0 +1,29 @@
+{
+  "Common": {
+    "siteTitle": "وبلاگ من"
+  },
+  "Posts": {
+    "title": "تمام مقالات وبلاگ",
+    "noImage": "بدون تصویر",
+    "readMore": "ادامه مطلب ←"
+  },
+  "Post": {
+    "like": "پسندیدن",
+    "liked": "پسندیده شد",
+    "comments": "دیدگاه‌ها",
+    "noComments": "هنوز دیدگاهی ثبت نشده است."
+  },
+  "CommentForm": {
+    "namePlaceholder": "نام شما",
+    "commentPlaceholder": "دیدگاه خود را بنویسید",
+    "submit": "ارسال دیدگاه",
+    "submitting": "در حال ارسال...",
+    "errorSubmit": "ارسال دیدگاه ناموفق بود.",
+    "errorNetwork": "خطا در ارسال دیدگاه."
+  },
+  "Navigation": {
+    "home": "خانه",
+    "archive": "آرشیو",
+    "about": "درباره من"
+  }
+}

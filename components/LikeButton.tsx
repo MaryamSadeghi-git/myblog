@@ -1,56 +1,60 @@
 // components/LikeButton.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-
-function getVisitorId(): string {
-  let id = localStorage.getItem('visitorId');
-  if (!id) {
-id = crypto.randomUUID();
-localStorage.setItem('visitorId', id);
-  }
-  return id;
-}
+import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function LikeButton({ slug }: { slug: string }) {
-  const [count, setCount] = useState(0);
-  const [liked, setLiked] = useState(false);
+  const t = useTranslations('Post');
+  const [likes, setLikes] = useState<number>(0);
+  const [liked, setLiked] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-setLiked(!!localStorage.getItem(`liked:${slug}`));
-fetch(`/api/posts/${slug}/like`)
-.then((r) => r.json())
-.then((d) => setCount(d.count ?? 0));
+    // آدرس دقیق بر اساس ساختار پوشه‌های شما
+    fetch(`/api/posts/${slug}/like`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch likes');
+        return res.json();
+      })
+      .then((data) => {
+        setLikes(data.likes || 0);
+        setLiked(data.liked || false);
+      })
+      .catch((err) => console.error(err));
   }, [slug]);
 
   const handleLike = async () => {
-if (liked) return;
-const res = await fetch(`/api/posts/${slug}/like`, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ visitorId: getVisitorId() }),
-});
-if (res.ok) {
-setLiked(true);
-setCount((c) => c + 1);
-localStorage.setItem(`liked:${slug}`, '1');
-}
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/posts/${slug}/like`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLikes(data.likes);
+        setLiked(data.liked);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-<button
-onClick={handleLike}
-disabled={liked}
-className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition font-medium ${
-liked
-? 'bg-cyan-950/50 border-cyan-600 text-cyan-300'
-: 'bg-[#0d121e] border-slate-800 text-slate-300 hover:border-cyan-500/50'
-}`}
->
-<span>{liked ? '❤️' : '🤍'}</span>
-<span>{liked ? 'پسندیدید' : 'پسندیدم'}</span>
-<span className="text-sm text-slate-400">({count})</span>
-</button>
+    <button
+      onClick={handleLike}
+      disabled={loading}
+      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+        liked
+          ? 'bg-red-500 text-white hover:bg-red-600'
+          : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-700'
+      }`}
+    >
+      ❤️ {likes} {liked ? t('liked') : t('like')}
+    </button>
   );
 }
-

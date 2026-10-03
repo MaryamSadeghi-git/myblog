@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
+/* ------------------------------------
+   Theme Tokens (Dark & Light)
+------------------------------------- */
+
+/* Default = Dark */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-main: #0a0a0c;
+  --bg-card: #15151b;          /* طوسی تیره منسجم */
+  --bg-card-hover: #22222b;    /* هاور طوسی پررنگ */
+  --border-subtle: #3a3a46;    /* خطوط مرزی طوسی کاملاً مشخص و پررنگ */
+
+  --text-main: #f9fafb;
+  --text-muted: #c4c8d2;       /* متن کمکی با طوسی روشن‌تر و بسیار خوانا */
+
+  --accent-orange: #ff6b00;
+  --accent-orange-hover: #e05e00;
+
+  color-scheme: dark;
 }
+
+/* Light Theme */
+html[data-theme='light'] {
+  --bg-main: #FDFBF7;          /* پس‌زمینه کرم-وانیلی بسیار روشن */
+  --bg-card: #FFFFFF;          /* کارت‌ها سفید خالص برای تمایز */
+  --bg-card-hover: #F8F5EE;    /* هاور با ته‌رنگ گرم */
+  --border-subtle: #EBE6DA;    /* کادرهای گرم به جای طوسی سرد */
+
+  --text-main: #1A1A1A;        /* مشکی گرم */
+  --text-muted: #666258;       /* متن ثانویه با ته‌رنگ قهوه‌ای ملایم */
+
+  --accent-orange: #FF6B00;    /* نارنجی همچنان ثابت */
+  --accent-orange-hover: #E05E00;
+
+  color-scheme: light;
+}
+
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg-main: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-border-subtle: var(--border-subtle);
+
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-orange-hover: var(--accent-orange-hover);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-main);
+  overflow-x: hidden;
 }

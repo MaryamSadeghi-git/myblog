@@ -1,41 +1,37 @@
 // components/Comments.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
-interface CommentItem {
-  id: number;
+interface Comment {
+  id: string;
   author: string;
   content: string;
   createdAt: string;
 }
 
 export default function Comments({ slug }: { slug: string }) {
-  const [comments, setComments] = useState<CommentItem[]>([]);
+  const tPost = useTranslations('Post');
+  const tForm = useTranslations('CommentForm');
+
+  const [comments, setComments] = useState<Comment[]>([]);
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // دریافت لیست کامنت‌ها
-  const fetchComments = async () => {
-    try {
-      const res = await fetch(`/api/posts/${slug}/comments`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    if (slug) fetchComments();
+    // آدرس دقیق دریافت کامنت‌ها بر اساس ساختار پوشه‌ها
+    fetch(`/api/posts/${slug}/comments`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch comments');
+        return res.json();
+      })
+      .then((data) => setComments(Array.isArray(data) ? data : []))
+      .catch((err) => console.error(err));
   }, [slug]);
 
-  // ثبت کامنت جدید
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!author.trim() || !content.trim()) return;
@@ -50,71 +46,78 @@ export default function Comments({ slug }: { slug: string }) {
         body: JSON.stringify({ author, content }),
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'خطایی در ثبت دیدگاه رخ داد.');
+      if (res.ok) {
+        const newComment = await res.json();
+        setComments((prev) => [newComment, ...prev]);
+        setAuthor('');
+        setContent('');
+      } else {
+        setErrorMsg(tForm('errorSubmit'));
       }
-
-      setAuthor('');
-      setContent('');
-      await fetchComments(); // رفرش لیست دیدگاه‌ها
-    } catch (err: any) {
-      setErrorMsg(err.message || 'خطایی در ثبت دیدگاه رخ داد. لطفاً دوباره تلاش کنید.');
+    } catch (error) {
+      setErrorMsg(tForm('errorNetwork'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="mt-10">
-      <h3 className="text-xl font-bold mb-4">دیدگاه‌ها ({comments.length})</h3>
+    <section className="mt-12 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+      <h3 className="text-xl font-bold mb-6">{tPost('comments')}</h3>
 
-      {/* فرم ارسال دیدگاه */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 mb-8">
-        <input
-          type="text"
-          placeholder="نام شما"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          required
-          className="p-2.5 rounded bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:border-blue-500"
-        />
-        <textarea
-          placeholder="متن نظر شما..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={4}
-          required
-          className="p-2.5 rounded bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:border-blue-500"
-        />
-        {errorMsg && <p className="text-red-400 text-sm">{errorMsg}</p>}
+      <form onSubmit={handleSubmit} className="mb-8 space-y-4">
+        <div>
+          <input
+            type="text"
+            placeholder={tForm('namePlaceholder')}
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <textarea
+            rows={3}
+            placeholder={tForm('commentPlaceholder')}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="self-start px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition disabled:opacity-50"
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
         >
-          {loading ? 'در حال ارسال...' : 'ارسال دیدگاه'}
+          {loading ? tForm('submitting') : tForm('submit')}
         </button>
       </form>
 
-      {/* لیست دیدگاه‌ها */}
-      <div className="flex flex-col gap-4">
+      <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-zinc-500 text-sm">هنوز دیدگاهی ثبت نشده است.</p>
+          <p className="text-zinc-500 text-sm">{tPost('noComments')}</p>
         ) : (
-          comments.map((c) => (
-            <div key={c.id} className="p-4 bg-zinc-900 border border-zinc-800 rounded-lg">
+          comments.map((comment) => (
+            <div
+              key={comment.id}
+              className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+            >
               <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-zinc-200">{c.author}</span>
+                <span className="font-semibold text-sm">{comment.author}</span>
                 <span className="text-xs text-zinc-500">
-                  {new Date(c.createdAt).toLocaleDateString('fa-IR')}
+                  {new Date(comment.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <p className="text-zinc-300 text-sm whitespace-pre-wrap">{c.content}</p>
+              <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-line">
+                {comment.content}
+              </p>
             </div>
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 }
