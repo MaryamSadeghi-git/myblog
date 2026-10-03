@@ -7,6 +7,12 @@ import { MobileFooter } from '@/components/HeroHeader';
 interface PageProps {
   params: Promise<{ locale: string }>;
 }
+type CountItem = {
+  postSlug: string;
+  _count: {
+    _all: number;
+  };
+};
 
 function getExcerpt(content: any, maxLength = 200): string {
   if (!content) return '';
@@ -114,8 +120,8 @@ export default async function HomePage({ params }: PageProps) {
   ]);
 
   // تبدیل آمارها به Map برای دسترسی سریع O(1)
-  const likesMap = new Map(likeCounts.map((item) => [item.postSlug, item._count._all]));
-  const commentsMap = new Map(commentCounts.map((item) => [item.postSlug, item._count._all]));
+  const likesMap = new Map(likeCounts.map((item : CountItem) => [item.postSlug, item._count._all]));
+  const commentsMap = new Map(commentCounts.map((item : CountItem) => [item.postSlug, item._count._all]));
 
   const posts = await Promise.all(
     rawPosts.map(async (post) => {
