@@ -3,6 +3,7 @@ import { reader } from '@/lib/keystatic-reader';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { prisma } from '@/lib/prisma';
+import db from '@/lib/db';
 import { MobileFooter } from '@/components/HeroHeader'; 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -104,24 +105,29 @@ export default async function HomePage({ params }: PageProps) {
 
   // گرفتن همه اسلاگ‌ها برای کوئری دیتابیس
   const slugs = rawPosts.map((p) => p.slug);
-
+  const commentsMap = new Map<string,number>();
   // دریافت آمار لایک و کامنت تمام پست‌ها به صورت تجمیعی از دیتابیس Prisma
-  const [likeCounts, commentCounts] = await Promise.all([
-    prisma.like.groupBy({
-      by: ['postSlug'],
-      where: { postSlug: { in: slugs } },
-      _count: { _all: true },
-    }),
-    prisma.comment.groupBy({
-      by: ['postSlug'],
-      where: { postSlug: { in: slugs } },
-      _count: { _all: true },
-    }),
-  ]);
-
+  // const [likeCounts] = await Promise([
+  //   prisma.like.groupBy({
+  //     by: ['postSlug'],
+  //     where: { postSlug: { in: slugs } },
+  //     _count: { _all: true },
+  //   }),
+  // ]);
+  if(slugs.length>0){
+    const [rows]:any = await db.query(
+      `select postSlug, COUNT(*) AS count
+      From comments
+      where postSlug In (?)
+      GROUP BY postSlug`,
+      [slugs]
+  );
+  for (const row of rows){
+    commentsMap.set(row.postSlug,Number(row.count));
+  }
+}
   // تبدیل آمارها به Map برای دسترسی سریع O(1)
-  const likesMap = new Map(likeCounts.map((item : CountItem) => [item.postSlug, item._count._all]));
-  const commentsMap = new Map(commentCounts.map((item : CountItem) => [item.postSlug, item._count._all]));
+  // const likesMap = new Map(likeCounts.map((item : CountItem) => [item.postSlug, item._count._all]));
 
   const posts = await Promise.all(
     rawPosts.map(async (post) => {
@@ -139,7 +145,7 @@ export default async function HomePage({ params }: PageProps) {
         ...post,
         excerpt,
         readingTime,
-        likes: likesMap.get(post.slug) || 0,
+        // likes: likesMap.get(post.slug) || 0,
         commentsCount: commentsMap.get(post.slug) || 0,
       };
     })
@@ -187,10 +193,10 @@ export default async function HomePage({ params }: PageProps) {
 
                   <span className="opacity-40">•</span>
 
-                  <span className="inline-flex items-center gap-1.5" title="Likes">
+                  {/* <span className="inline-flex items-center gap-1.5" title="Likes">
                     <HeartIcon />
                     <span>{post.likes}</span>
-                  </span>
+                  </span> */}
 
                   <span className="opacity-40">•</span>
 
