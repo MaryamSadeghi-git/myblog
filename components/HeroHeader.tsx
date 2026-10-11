@@ -1,7 +1,9 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import ThemeToggle from './ThemeToggle';
+
 // آیکون‌های SVG
 function HomeIcon({ className }: { className?: string }) {
   return (
@@ -85,6 +87,15 @@ export const socialLinks = [
 
 export default function HeroHeader({ locale }: { locale?: string }) {
   const isFa = locale !== 'en';
+  const pathname = usePathname();
+
+  // تابع تشخیص مسیر فعال
+  const isActive = (href: string) => {
+    if (href === '/') {
+      return pathname === `/${locale}` || pathname === `/${locale}/` || pathname === '/';
+    }
+    return pathname.includes(href);
+  };
 
   const navLinks = [
     { href: '/', label: isFa ? 'خانه' : 'Home', icon: HomeIcon },
@@ -96,8 +107,7 @@ export default function HeroHeader({ locale }: { locale?: string }) {
 
   return (
     <>
-    
-      {/* سایدبار دسکتاپ (ثابت در سمت راست در حالت فارسی یا چپ در انگلیسی) */}
+      {/* سایدبار دسکتاپ */}
       <aside
         className={`hidden md:flex fixed top-6 bottom-6 w-64 bg-bg-card border border-border-subtle rounded-3xl p-6 flex-col justify-between z-50 shadow-sm ${
           isFa ? 'right-6' : 'left-6'
@@ -113,20 +123,25 @@ export default function HeroHeader({ locale }: { locale?: string }) {
             <h1 className="text-base font-bold text-text-main tracking-wide">
               {isFa ? 'وبلاگ من' : 'My Blog'}
             </h1>
-            
           </div>
 
           {/* لینک‌های ناوبری دسکتاپ */}
           <nav className="flex flex-col space-y-1.5">
             {navLinks.map((link) => {
               const Icon = link.icon;
+              const active = isActive(link.href);
+
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted hover:text-accent-orange hover:bg-accent-orange/10 text-sm font-medium transition-all group"
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                    active
+                      ? 'bg-accent-orange/15 text-accent-orange font-bold'
+                      : 'text-text-muted hover:text-accent-orange hover:bg-accent-orange/10'
+                  }`}
                 >
-                  <Icon className="w-5 h-5 transition-transform group-hover:scale-110" />
+                  <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${active ? 'text-accent-orange' : ''}`} />
                   <span>{link.label}</span>
                 </Link>
               );
@@ -134,7 +149,7 @@ export default function HeroHeader({ locale }: { locale?: string }) {
           </nav>
         </div>
 
-        {/* شبکه‌های اجتماعی فقط در سایدبار دسکتاپ */}
+        {/* شبکه‌های اجتماعی در سایدبار دسکتاپ */}
         <div className="pt-5 border-t border-border-subtle">
           <p className="text-[11px] text-text-muted mb-3 font-medium">
             {isFa ? 'شبکه‌های اجتماعی' : 'Social Networks'}
@@ -160,17 +175,23 @@ export default function HeroHeader({ locale }: { locale?: string }) {
         </div>
       </aside>
 
-      {/* هدر موبایل: دکمه‌ها تمام عرض را پر می‌کنند و در بالای صفحه فیکس هستند */}
+      {/* هدر موبایل */}
       <header className="md:hidden fixed top-3 left-3 right-3 z-50">
         <div className="w-full bg-bg-card/90 backdrop-blur-md border border-border-subtle rounded-full px-2 py-1.5 shadow-md">
           <nav className="w-full flex items-center justify-between gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
+              const active = isActive(link.href);
+
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-full text-text-muted hover:text-accent-orange hover:bg-accent-orange/10 transition-all text-[11px] font-medium whitespace-nowrap"
+                  className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-full transition-all text-[11px] font-medium whitespace-nowrap ${
+                    active
+                      ? 'bg-accent-orange/15 text-accent-orange font-bold'
+                      : 'text-text-muted hover:text-accent-orange hover:bg-accent-orange/10'
+                  }`}
                 >
                   <Icon className="w-4 h-4 shrink-0 mb-0.5" />
                   <span>{link.label}</span>
@@ -178,8 +199,8 @@ export default function HeroHeader({ locale }: { locale?: string }) {
               );
             })}
             <div>
-                <ThemeToggle />
-              </div>
+              <ThemeToggle />
+            </div>
           </nav>
         </div>
       </header>
@@ -187,7 +208,7 @@ export default function HeroHeader({ locale }: { locale?: string }) {
   );
 }
 
-{/* فوتر موبایل: اختصاصی برای قرار گرفتن در پایین صفحه زیر مقالات */}
+{/* فوتر موبایل */}
 export function MobileFooter({ locale }: { locale?: string }) {
   const isFa = locale !== 'en';
 
@@ -221,4 +242,3 @@ export function MobileFooter({ locale }: { locale?: string }) {
     </footer>
   );
 }
-

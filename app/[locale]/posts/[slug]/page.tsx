@@ -4,6 +4,7 @@ import { reader } from '@/lib/keystatic-reader';
 import LikeButton from '@/components/LikeButton';
 import Comments from '@/components/Comments';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import ViewTracker from '@/components/ViewTracker';
 import { faToEn } from '@/lib/translate';
 import { Link } from '@/i18n/navigation';
 
@@ -33,6 +34,9 @@ export default async function PostPage({ params }: PageProps) {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+      {/* ردیاب ثبت بازدید خودکار سمت کلاینت */}
+      <ViewTracker slug={slug} />
+
       {/* دکمه بازگشت */}
       <div className="mb-6">
         <Link

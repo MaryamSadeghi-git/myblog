@@ -2,6 +2,8 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import  db from './db'; 
+import { unstable_cache } from 'next/cache';
 
 const postsDirectory = path.join(process.cwd(), 'content/posts');
 
@@ -66,4 +68,67 @@ export function getPostBySlug(slug: string): PostItem | null {
     return null;
   }
 }
+//برترین مقالات
+// دریافت ۵ مقاله برتر بر اساس بیشترین لایک از دیتابیس و ترکیب با فایل‌های محلی
+export async function getTopPosts() {
+  try {
+    // ۱. گرفتن ۵ اسلاگ برتر بر اساس تعداد لایک از جدول likes
+    const [rows]: any = await db.query(`
+      SELECT postSlug, COUNT(id) as likeCount 
+      FROM likes 
+      GROUP BY postSlug 
+      ORDER BY likeCount DESC 
+      LIMIT 5
+    `);
 
+    if (!rows || rows.length === 0) {
+      return [];
+    }
+
+    // ۲. خواندن اطلاعات هر مقاله از فایل‌های Markdown مربوطه
+    const topPosts = rows.map((row: { postSlug: string; likeCount: number }) => {
+      const post = getPostBySlug(row.postSlug);
+      return {
+        slug: row.postSlug,
+        title: post ? post.title : row.postSlug,
+        date: post ? post.date : '',
+        likeCount: row.likeCount,
+      };
+    });
+
+    return topPosts;
+  } catch (error) {
+    console.error('Error fetching top posts:', error);
+    return [];
+  }
+}
+// دریافت ۵ مقاله پربازدید بر اساس جدول views
+export async function getPopularPosts() {
+  try {
+    const [rows]: any = await db.query(`
+      SELECT postSlug, viewCount 
+      FROM views 
+      ORDER BY viewCount DESC 
+      LIMIT 5
+    `);
+
+    if (!rows || rows.length === 0) {
+      return [];
+    }
+
+    const popularPosts = rows.map((row: { postSlug: string; viewCount: number }) => {
+      const post = getPostBySlug(row.postSlug);
+      return {
+        slug: row.postSlug,
+        title: post ? post.title : row.postSlug,
+        date: post ? post.date : '',
+        viewCount: row.viewCount,
+      };
+    });
+
+    return popularPosts;
+  } catch (error) {
+    console.error('Error fetching popular posts:', error);
+    return [];
+  }
+}

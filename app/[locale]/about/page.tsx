@@ -50,7 +50,8 @@ export default async function AboutPage({ params }: PageProps) {
               {isFa ? 'درباره نویسنده' : 'About the Author'}
             </span>
 
-            <h1 className="text-3xl sm:text-4xl font-black text-white">
+            {/* اصلاح شد: از text-text-main استفاده شد */}
+            <h1 className="text-3xl sm:text-4xl font-black text-text-main">
               {isFa ? 'سلام، من اینجا می‌نویسم' : "Hi, I'm writing here"}
             </h1>
 
@@ -67,7 +68,8 @@ export default async function AboutPage({ params }: PageProps) {
       <section className="rounded-2xl bg-bg-card border border-border-subtle p-6 sm:p-8 space-y-5">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-accent-orange" />
-          <h2 className="text-xl font-bold text-white">
+          {/* اصلاح شد: از text-text-main استفاده شد */}
+          <h2 className="text-xl font-bold text-text-main">
             {isFa ? 'حوزه‌ها و مهارت‌ها' : 'Skills & Technologies'}
           </h2>
         </div>
@@ -88,7 +90,8 @@ export default async function AboutPage({ params }: PageProps) {
       <section className="rounded-2xl bg-bg-card border border-border-subtle p-6 sm:p-8 space-y-4">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-accent-orange" />
-          <h2 className="text-xl font-bold text-white">
+          {/* اصلاح شد: از text-text-main استفاده شد */}
+          <h2 className="text-xl font-bold text-text-main">
             {isFa ? 'ارتباط با من' : 'Get in Touch'}
           </h2>
         </div>

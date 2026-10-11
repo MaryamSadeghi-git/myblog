@@ -10,35 +10,38 @@ export default function LikeButton({ slug }: { slug: string }) {
   const [liked, setLiked] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
+  // لود اولیه تعداد و وضعیت لایک
   useEffect(() => {
-    // آدرس دقیق بر اساس ساختار پوشه‌های شما
     fetch(`/api/posts/${slug}/like`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch likes');
         return res.json();
       })
       .then((data) => {
-        setLikes(data.likes || 0);
-        setLiked(data.liked || false);
+        setLikes(data.count ?? 0);
+        setLiked(data.isLiked ?? false);
       })
       .catch((err) => console.error(err));
   }, [slug]);
 
+  // ثبت / لغو لایک
   const handleLike = async () => {
     if (loading) return;
     setLoading(true);
 
     try {
+      // مرورگر به طور خودکار کوکی را در هدر ارسال می‌کند، نیازی به body نیست
       const res = await fetch(`/api/posts/${slug}/like`, {
         method: 'POST',
       });
+
       if (res.ok) {
         const data = await res.json();
-        setLikes(data.likes);
-        setLiked(data.liked);
+        setLikes(data.count);
+        setLiked(data.isLiked);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error toggling like:', err);
     } finally {
       setLoading(false);
     }

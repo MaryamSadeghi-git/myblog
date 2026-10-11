@@ -2,18 +2,12 @@
 import { reader } from '@/lib/keystatic-reader';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { prisma } from '@/lib/prisma';
 import db from '@/lib/db';
 import { MobileFooter } from '@/components/HeroHeader'; 
+
 interface PageProps {
   params: Promise<{ locale: string }>;
 }
-type CountItem = {
-  postSlug: string;
-  _count: {
-    _all: number;
-  };
-};
 
 function getExcerpt(content: any, maxLength = 200): string {
   if (!content) return '';
@@ -44,7 +38,6 @@ function getExcerpt(content: any, maxLength = 200): string {
   return cleaned.slice(0, maxLength).trim() + '...';
 }
 
-// محاسبه زمان تقریبی مطالعه (بر اساس ۲۰۰ کلمه در دقیقه)
 function estimateReadingTime(content: any): number {
   let text = '';
   if (typeof content === 'string') {
@@ -72,7 +65,6 @@ function formatDate(dateLike: string | Date | undefined, locale: string) {
   }).format(d);
 }
 
-// آیکون‌های مینیمال
 function ClockIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" className="fill-none stroke-current stroke-2">
@@ -103,31 +95,35 @@ export default async function HomePage({ params }: PageProps) {
   const t = await getTranslations({ locale, namespace: 'Posts' });
   const rawPosts = await reader.collections.posts.all();
 
-  // گرفتن همه اسلاگ‌ها برای کوئری دیتابیس
   const slugs = rawPosts.map((p) => p.slug);
-  const commentsMap = new Map<string,number>();
-  // دریافت آمار لایک و کامنت تمام پست‌ها به صورت تجمیعی از دیتابیس Prisma
-  // const [likeCounts] = await Promise([
-  //   prisma.like.groupBy({
-  //     by: ['postSlug'],
-  //     where: { postSlug: { in: slugs } },
-  //     _count: { _all: true },
-  //   }),
-  // ]);
-  if(slugs.length>0){
-    const [rows]:any = await db.query(
-      `select postSlug, COUNT(*) AS count
-      From comments
-      where postSlug In (?)
-      GROUP BY postSlug`,
+  const commentsMap = new Map<string, number>();
+  const likesMap = new Map<string, number>();
+
+  if (slugs.length > 0) {
+    // 1. گرفتن تعداد کامنت‌ها
+    const [commentRows]: any = await db.query(
+      `SELECT postSlug, COUNT(*) AS count
+       FROM comments
+       WHERE postSlug IN (?)
+       GROUP BY postSlug`,
       [slugs]
-  );
-  for (const row of rows){
-    commentsMap.set(row.postSlug,Number(row.count));
+    );
+    for (const row of commentRows) {
+      commentsMap.set(row.postSlug, Number(row.count));
+    }
+
+    // 2. گرفتن تعداد لایک‌ها
+    const [likeRows]: any = await db.query(
+      `SELECT postSlug, COUNT(*) AS count
+       FROM likes
+       WHERE postSlug IN (?)
+       GROUP BY postSlug`,
+      [slugs]
+    );
+    for (const row of likeRows) {
+      likesMap.set(row.postSlug, Number(row.count));
+    }
   }
-}
-  // تبدیل آمارها به Map برای دسترسی سریع O(1)
-  // const likesMap = new Map(likeCounts.map((item : CountItem) => [item.postSlug, item._count._all]));
 
   const posts = await Promise.all(
     rawPosts.map(async (post) => {
@@ -145,7 +141,7 @@ export default async function HomePage({ params }: PageProps) {
         ...post,
         excerpt,
         readingTime,
-        // likes: likesMap.get(post.slug) || 0,
+        likes: likesMap.get(post.slug) || 0,
         commentsCount: commentsMap.get(post.slug) || 0,
       };
     })
@@ -163,7 +159,7 @@ export default async function HomePage({ params }: PageProps) {
         </h2>
       </div>
 
-      {/* لیست کارت‌های عریض با کادر و افکت هاور */}
+      {/* لیست کارت‌های مقالات */}
       <div className="space-y-6">
         {posts.map((post) => {
           const dateRaw = (post.entry as any).date as string | undefined;
@@ -175,7 +171,7 @@ export default async function HomePage({ params }: PageProps) {
             >
               {/* بدنه متنی کارت */}
               <div className="flex-1 min-w-0">
-                {/* ردیف متادیتا: تاریخ | زمان مطالعه | لایک | کامنت */}
+                {/* متادیتا: تاریخ | زمان مطالعه | لایک | کامنت */}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-text-muted mb-3 font-mono">
                   {dateRaw && (
                     <>
@@ -193,10 +189,10 @@ export default async function HomePage({ params }: PageProps) {
 
                   <span className="opacity-40">•</span>
 
-                  {/* <span className="inline-flex items-center gap-1.5" title="Likes">
+                  <span className="inline-flex items-center gap-1.5" title="Likes">
                     <HeartIcon />
                     <span>{post.likes}</span>
-                  </span> */}
+                  </span>
 
                   <span className="opacity-40">•</span>
 
@@ -227,7 +223,7 @@ export default async function HomePage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* تصویر بندانگشتی در کادر */}
+              {/* تصویر شاخص */}
               {post.entry.coverImage ? (
                 <Link
                   href={`/posts/${post.slug}`}
@@ -244,7 +240,7 @@ export default async function HomePage({ params }: PageProps) {
           );
         })}
       </div>
-        <MobileFooter locale={locale} />
+      <MobileFooter locale={locale} />
     </div>
   );
 }
